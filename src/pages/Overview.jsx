@@ -159,11 +159,11 @@ const Overview = () => {
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-                  🎉 Congratulations! You are eligible to apply for Membership.
+                  Congratulations! You are eligible to apply for Membership.
                 </h2>
                 <div className="text-gray-600 space-y-1 text-sm md:text-base">
                   <p>
-                    Based on your assessment results, you have successfully qualified to apply for membership in NC Digital School.
+                    Based on your assessment results, you have successfully qualified to apply for membership.
                   </p>
                   <p>
                     Please complete your membership application by uploading the required verification documents.
@@ -193,7 +193,7 @@ const Overview = () => {
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-3">
           <User size={32} className="text-green-600" />
-          Welcome Back, {user?.fullName || 'User'}! 👋
+          Welcome Back, {user?.fullName || 'User'}
         </h1>
         <p className="text-gray-500 mt-1 text-sm md:text-base">
           Here's an overview of your membership status and progress.

@@ -19,7 +19,7 @@ const Navbar = () => {
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
   return (
-    <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200/80 h-20 px-6 md:px-8 flex items-center justify-between shadow-md sticky top-0 z-50">
+    <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200/80 h-20 px-6 md:px-8 flex items-center justify-between shadow-md sticky top-0 z-50 min-w-[400px]">
       
       {/* Left Section - Brand */}
       <section className="flex items-center gap-4">
