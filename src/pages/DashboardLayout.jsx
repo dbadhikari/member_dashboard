@@ -14,6 +14,7 @@ import {
   Lock,
   ChevronLeft,
   ChevronRight,
+  GitBranch
 } from "lucide-react";
 
 const DashboardLayout = () => {
@@ -62,6 +63,7 @@ const DashboardLayout = () => {
     { name: "Overview", icon: LayoutDashboard, path: "", requiredLevel: "basic" },
     { name: "Eligible", icon: ShieldCheck, path: "eligible", requiredLevel: "basic" },
     { name: "Membership", icon: BadgeCheck, path: "membership", requiredLevel: "eligible" },
+     { name: "Branches", icon: GitBranch, path: "branches", requiredLevel: "member" },
     { name: "Meetings", icon: CalendarDays, path: "meetings", requiredLevel: "member" },
     { name: "Events", icon: Calendar, path: "events", requiredLevel: "member" },
     { name: "Training", icon: GraduationCap, path: "training", requiredLevel: "member" },

@@ -221,6 +221,9 @@ const Eligible = () => {
       saveUser(updatedUser);
       setCurrentStep(4);
       generateCertificate();
+      
+      // Reload the page after passing the exam
+      window.location.reload();
     }
   };
 
@@ -856,7 +859,18 @@ const Eligible = () => {
                     </p>
                   </div>
                   <button
-                    onClick={() => navigate("/membership")}
+                    onClick={() => {
+                      // Update user level to 'eligible' before navigating
+                      const storedUser = localStorage.getItem('user');
+                      if (storedUser) {
+                        try {
+                          const parsedUser = JSON.parse(storedUser);
+                          parsedUser.level = 'eligible';
+                          localStorage.setItem('user', JSON.stringify(parsedUser));
+                        } catch (e) {}
+                      }
+                      navigate("/membership");
+                    }}
                     className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2 whitespace-nowrap"
                   >
                     <BadgeCheck className="w-4 h-4" />

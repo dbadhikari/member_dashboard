@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { 
-  CheckCircle, 
-  Upload, 
-  File, 
-  Loader2, 
+import {
+  CheckCircle,
+  Upload,
+  File,
+  Loader2,
   AlertCircle,
   Calendar,
   User,
@@ -20,8 +20,14 @@ import {
   RefreshCw,
   History,
   Receipt,
-  MapPin
+  MapPin,
+  Plus,
+  Eye,
+  X,
+  Building,
+  Award,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // --- Validation Schema ---
 const validationSchema = Yup.object({
@@ -71,7 +77,7 @@ const FileUploadField = ({ label, name, formik, required = true }) => {
       <label className="block text-sm font-medium text-gray-700 mb-1.5">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
-      <div 
+      <div
         className={`relative border-2 border-dashed rounded-lg p-4 transition-all ${
           error && touched ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-gray-50 hover:border-green-400'
         }`}
@@ -111,6 +117,8 @@ const FileUploadField = ({ label, name, formik, required = true }) => {
 // --- Document Viewer Component ---
 const DocumentViewer = ({ files, label }) => {
   const [showFiles, setShowFiles] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   if (!files || files.length === 0) return null;
 
@@ -124,6 +132,15 @@ const DocumentViewer = ({ files, label }) => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const handlePreview = (file) => {
+    if (file.type && file.type.startsWith('image/')) {
+      setSelectedFile(file);
+      setIsPreviewOpen(true);
+    } else {
+      handleDownload(file);
+    }
   };
 
   return (
@@ -150,15 +167,63 @@ const DocumentViewer = ({ files, label }) => {
                 </span>
                 <span className="text-xs text-gray-400">({(file.size / 1024).toFixed(1)} KB)</span>
               </div>
-              <button
-                onClick={() => handleDownload(file)}
-                className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700 font-medium"
-              >
-                <Download size={14} />
-                Download
-              </button>
+              <div className="flex items-center gap-2">
+                {file.type && file.type.startsWith('image/') && (
+                  <button
+                    onClick={() => handlePreview(file)}
+                    className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    <Eye size={14} />
+                    Preview
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDownload(file)}
+                  className="flex items-center gap-1 text-sm text-green-600 hover:text-green-700 font-medium"
+                >
+                  <Download size={14} />
+                  Download
+                </button>
+              </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {isPreviewOpen && selectedFile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-auto">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800">{selectedFile.name}</h3>
+              <button
+                onClick={() => setIsPreviewOpen(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="p-4 flex items-center justify-center min-h-[300px]">
+              {selectedFile.type && selectedFile.type.startsWith('image/') ? (
+                <img
+                  src={URL.createObjectURL(selectedFile)}
+                  alt={selectedFile.name}
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <File size={48} className="mx-auto text-gray-400 mb-3" />
+                  <p className="text-gray-600">Preview not available for this file type</p>
+                  <button
+                    onClick={() => handleDownload(selectedFile)}
+                    className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Download File
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -211,7 +276,7 @@ const MembershipCard = ({ memberData }) => {
 };
 
 // --- Payment Tracker Component ---
-const PaymentTracker = ({ payments }) => {
+const PaymentTracker = ({ payments, onPrePay }) => {
   if (!payments || payments.length === 0) {
     return (
       <div className="text-center py-6 text-gray-500">
@@ -234,9 +299,6 @@ const PaymentTracker = ({ payments }) => {
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-gray-800">
-                  ${payment.amount || '0.00'}
-                </span>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
                   payment.status === 'paid' ? 'bg-green-100 text-green-700' : 
                   payment.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 
@@ -244,6 +306,14 @@ const PaymentTracker = ({ payments }) => {
                 }`}>
                   {payment.status || 'Paid'}
                 </span>
+                {payment.status === 'pending' && (
+                  <button
+                    onClick={() => onPrePay && onPrePay(payment.amount || 299)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded-lg font-medium transition-colors"
+                  >
+                    Pay Now
+                  </button>
+                )}
               </div>
             </div>
             
@@ -266,7 +336,7 @@ const PrePaymentSection = ({ onPrePay, currentExpiry }) => {
   const membershipFee = 299;
   
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-200">
+    <div className="bg-blue-50 rounded-xl p-5 border border-blue-200">
       <div className="flex items-center gap-2 mb-3">
         <Gift size={18} className="text-blue-600" />
         <h3 className="font-semibold text-gray-800">Pre-pay for Next Year</h3>
@@ -304,52 +374,208 @@ const PrePaymentSection = ({ onPrePay, currentExpiry }) => {
   );
 };
 
+// --- Branches Component ---
+const BranchesSection = ({ branches, onAddBranch }) => {
+  const [showAll, setShowAll] = useState(false);
+
+  if (!branches || branches.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow p-5 border border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Building size={18} className="text-green-600" />
+            <h2 className="text-lg font-bold text-gray-800">Branches</h2>
+          </div>
+        </div>
+        <div className="text-center py-8">
+          <Building size={40} className="mx-auto text-gray-300 mb-3" />
+          <p className="text-gray-500 text-sm">No branches added yet</p>
+          <button
+            onClick={onAddBranch}
+            className="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2"
+          >
+            <Plus size={16} />
+            Add Branch
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const displayBranches = showAll ? branches : branches.slice(0, 3);
+
+  return (
+    <div className="bg-white rounded-xl shadow p-5 border border-gray-200">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Building size={18} className="text-green-600" />
+          <h2 className="text-lg font-bold text-gray-800">Branches</h2>
+          <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">{branches.length}</span>
+        </div>
+        <button
+          onClick={onAddBranch}
+          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1"
+        >
+          <Plus size={14} />
+          Add
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        {displayBranches.map((branch, index) => (
+          <div key={index} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Building size={18} className="text-green-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-gray-800 text-sm">{branch.name || `Branch ${index + 1}`}</h4>
+                <p className="text-xs text-gray-500">{branch.location || 'Location not specified'}</p>
+              </div>
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                {branch.status || 'Active'}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {branches.length > 3 && (
+        <Link
+          to="/branches"
+          className="w-full mt-3 text-center text-sm text-green-600 hover:text-green-700 font-medium py-2 border-t border-gray-100 block"
+        >
+          View All {branches.length} Branches →
+        </Link>
+      )}
+    </div>
+  );
+};
+
+// --- Certificate Component ---
+const CertificateCard = ({ memberData }) => {
+  if (!memberData) return null;
+
+  return (
+    <div className="bg-white rounded-xl shadow p-5 border border-gray-200">
+      <div className="flex items-center gap-2 mb-3">
+        <Award size={18} className="text-green-600" />
+        <h3 className="font-semibold text-gray-800">Certificate</h3>
+      </div>
+      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
+        <div className="mb-2">
+          <Award size={32} className="mx-auto text-green-600" />
+        </div>
+        <h4 className="font-bold text-gray-800 text-sm">Certificate of Membership</h4>
+        <p className="text-xs text-gray-500 mt-1">Member #{memberData.memberId}</p>
+        <p className="text-xs text-gray-500">{memberData.name}</p>
+        <button className="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1">
+          <Download size={12} />
+          Download Certificate
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// --- Uploaded Documents Component ---
+const UploadedDocuments = ({ files }) => {
+  if (!files || Object.keys(files).length === 0) return null;
+
+  const hasFiles = Object.values(files).some(arr => arr && arr.length > 0);
+  if (!hasFiles) return null;
+
+  const labels = {
+    pan: 'PAN Card',
+    tax: 'Tax Certificate',
+    citizenship: 'Citizenship',
+    photo: 'Passport Photo'
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow p-5 border border-gray-200">
+      <div className="flex items-center gap-2 mb-4">
+        <FileText size={18} className="text-green-600" />
+        <h2 className="text-lg font-bold text-gray-800">Uploaded Documents</h2>
+      </div>
+      <div className="space-y-1">
+        {Object.entries(files).map(([key, fileList]) => {
+          if (!fileList || fileList.length === 0) return null;
+          return (
+            <DocumentViewer key={key} files={fileList} label={labels[key] || key} />
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 // --- Main Component ---
 const MemberShip = () => {
   const [submittedData, setSubmittedData] = useState(null);
   const [memberData, setMemberData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [branches, setBranches] = useState([]);
+  const [userData, setUserData] = useState(null);
 
   // Check localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem('membershipApplication');
+    const storedUser = localStorage.getItem('user');
+    
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUserData(parsedUser);
+      } catch (e) {
+        console.warn('Invalid user data');
+      }
+    }
+
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
         if (parsed.status === 'pending' || parsed.status === 'approved') {
           setSubmittedData(parsed);
           if (parsed.status === 'approved') {
-            // Generate multiple payment invoices for demo
+            // Load branches from localStorage
+            const storedBranches = localStorage.getItem('branches');
+            if (storedBranches) {
+              try {
+                setBranches(JSON.parse(storedBranches));
+              } catch (e) {
+                setBranches([]);
+              }
+            }
+
+            // Generate invoices
+            const currentDate = new Date();
+            const expiryDate = new Date(parsed.approvedAt || currentDate);
+            expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+
             const payments = [
               {
-                invoiceNumber: 'INV-2024-001',
-                amount: 299,
-                date: 'Jan 15, 2024',
-                period: 'Annual 2024',
-                status: 'paid'
+                invoiceNumber: `INV-${currentDate.getFullYear()}-001`,
+                date: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                period: 'Annual 2025',
+                status: 'paid',
+                amount: 299
               },
               {
-                invoiceNumber: 'INV-2023-001',
-                amount: 299,
-                date: 'Jan 15, 2023',
-                period: 'Annual 2023',
-                status: 'paid'
-              },
-              {
-                invoiceNumber: 'INV-2022-001',
-                amount: 299,
-                date: 'Jan 15, 2022',
-                period: 'Annual 2022',
-                status: 'paid'
+                invoiceNumber: `INV-${currentDate.getFullYear() + 1}-001`,
+                date: expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                period: 'Annual 2026',
+                status: 'pending',
+                amount: 299
               }
             ];
 
             setMemberData({
-              memberId: 'M' + Math.floor(Math.random() * 1000000),
-              name: 'John Doe',
-              joiningDate: parsed.approvedAt ? new Date(parsed.approvedAt).toLocaleDateString() : 'Jan 15, 2024',
-              expiryDate: parsed.expiryDate ? new Date(parsed.expiryDate).toLocaleDateString() : 'Jan 15, 2025',
+              memberId: parsed.memberId || 'M' + Math.floor(Math.random() * 1000000),
+              name: parsed.name || 'John Doe',
+              joiningDate: parsed.approvedAt ? new Date(parsed.approvedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              expiryDate: expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
               headOffice: 'Kathmandu, Nepal',
               payments: payments,
               uploadedFiles: {
@@ -358,9 +584,13 @@ const MemberShip = () => {
                 citizenship: parsed.citizenship ? [{ name: parsed.citizenship, size: 320000, type: 'image/jpeg' }] : [],
                 photo: parsed.photo ? [{ name: parsed.photo, size: 150000, type: 'image/jpeg' }] : []
               }
+              
             });
+            
           }
+          
         }
+        
       } catch (e) {
         console.warn('Invalid localStorage data');
       }
@@ -386,6 +616,7 @@ const MemberShip = () => {
         photo: values.photo?.name || '',
         status: 'pending',
         submittedAt: new Date().toISOString(),
+        name: userData?.fullName || 'John Doe',
       };
 
       localStorage.setItem('membershipApplication', JSON.stringify(submission));
@@ -400,9 +631,26 @@ const MemberShip = () => {
   const handleReset = () => {
     formik.resetForm();
     localStorage.removeItem('membershipApplication');
+    localStorage.removeItem('branches');
     setSubmittedData(null);
     setMemberData(null);
     setShowForm(false);
+    setBranches([]);
+  };
+
+  // --- Update User Level Helper ---
+  const updateUserLevel = (level) => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        parsedUser.level = level;
+        localStorage.setItem('user', JSON.stringify(parsedUser));
+        setUserData(parsedUser);
+      } catch (e) {
+        console.warn('Could not update user level');
+      }
+    }
   };
 
   // --- Simulate Approval ---
@@ -411,30 +659,55 @@ const MemberShip = () => {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
+        const currentDate = new Date();
+        const expiryDate = new Date(currentDate);
+        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+
         const approvedData = {
           ...parsed,
           status: 'approved',
-          approvedAt: new Date().toISOString(),
-          expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+          approvedAt: currentDate.toISOString(),
+          expiryDate: expiryDate.toISOString(),
+          memberId: 'M' + Math.floor(Math.random() * 1000000),
+          name: parsed.name || 'John Doe',
         };
         localStorage.setItem('membershipApplication', JSON.stringify(approvedData));
         setSubmittedData(approvedData);
         
+        // Update user level to 'member'
+        updateUserLevel('member');
+        
+        // Initialize branches with some default data
+        const defaultBranches = [
+          { name: 'Kathmandu Main', location: 'Kathmandu, Nepal', status: 'Active' },
+          { name: 'Pokhara', location: 'Pokhara, Nepal', status: 'Active' },
+          { name: 'Lalitpur', location: 'Lalitpur, Nepal', status: 'Active' },
+        ];
+        localStorage.setItem('branches', JSON.stringify(defaultBranches));
+        setBranches(defaultBranches);
+
         const payments = [
           {
-            invoiceNumber: 'INV-2024-001',
-            amount: 299,
-            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            period: 'Annual 2024',
-            status: 'paid'
+            invoiceNumber: `INV-${currentDate.getFullYear()}-001`,
+            date: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            period: 'Annual 2025',
+            status: 'paid',
+            amount: 299
+          },
+          {
+            invoiceNumber: `INV-${currentDate.getFullYear() + 1}-001`,
+            date: expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            period: 'Annual 2026',
+            status: 'pending',
+            amount: 299
           }
         ];
 
         setMemberData({
-          memberId: 'M' + Math.floor(Math.random() * 1000000),
-          name: 'John Doe',
-          joiningDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-          expiryDate: new Date(approvedData.expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          memberId: approvedData.memberId,
+          name: approvedData.name,
+          joiningDate: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          expiryDate: expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
           headOffice: 'Kathmandu, Nepal',
           payments: payments,
           uploadedFiles: {
@@ -444,6 +717,9 @@ const MemberShip = () => {
             photo: parsed.photo ? [{ name: parsed.photo, size: 150000, type: 'image/jpeg' }] : []
           }
         });
+
+          window.location.reload();
+
       } catch (e) {
         console.warn('Invalid localStorage data');
       }
@@ -452,27 +728,64 @@ const MemberShip = () => {
 
   // --- Handle Pre-payment ---
   const handlePrePay = (amount) => {
+    const currentDate = new Date();
     const newInvoice = {
-      invoiceNumber: `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+      invoiceNumber: `INV-${currentDate.getFullYear() + 1}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
       amount: amount,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      date: currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       period: 'Annual Next Year',
       status: 'paid'
     };
     
     // Update member data with new payment
     setMemberData(prev => {
-      const newExpiryDate = new Date(prev?.expiryDate || new Date());
+      if (!prev) return prev;
+      const newExpiryDate = new Date(prev.expiryDate || new Date());
       newExpiryDate.setFullYear(newExpiryDate.getFullYear() + 1);
       
+      // Update the pending invoice to paid and add new pending
+      const updatedPayments = prev.payments.map(p => {
+        if (p.status === 'pending') {
+          return { ...p, status: 'paid' };
+        }
+        return p;
+      });
+
+      // Add new pending invoice for next year
+      const nextYear = new Date(newExpiryDate);
+      nextYear.setFullYear(nextYear.getFullYear() + 1);
+      updatedPayments.push({
+        invoiceNumber: `INV-${nextYear.getFullYear()}-001`,
+        date: nextYear.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        period: `Annual ${nextYear.getFullYear()}`,
+        status: 'pending',
+        amount: 299
+      });
+
       return {
         ...prev,
-        payments: [newInvoice, ...(prev?.payments || [])],
+        payments: updatedPayments,
         expiryDate: newExpiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       };
     });
     
     alert(`✅ Pre-payment of $${amount} processed successfully!\nYour membership has been extended for another year.`);
+  };
+
+  // --- Handle Add Branch ---
+  const handleAddBranch = () => {
+    const branchName = prompt('Enter branch name:');
+    if (branchName) {
+      const branchLocation = prompt('Enter branch location:');
+      const newBranch = {
+        name: branchName,
+        location: branchLocation || 'Location not specified',
+        status: 'Active'
+      };
+      const updatedBranches = [...branches, newBranch];
+      setBranches(updatedBranches);
+      localStorage.setItem('branches', JSON.stringify(updatedBranches));
+    }
   };
 
   // --- Render Approved Dashboard ---
@@ -482,21 +795,21 @@ const MemberShip = () => {
     const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4 md:p-8">
-        <div className="max-w-6xl mx-auto">
+      <div className="min-h-screen bg-gray-100 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <h1 className="text-2xl font-bold text-gray-800">Membership Dashboard</h1>
             <div className="flex gap-2">
               <button
                 onClick={simulateApproval}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-md transition-all"
+                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow transition-all"
               >
                 🔄 Simulate
               </button>
               <button
                 onClick={handleReset}
-                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-md transition-all"
+                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow transition-all"
               >
                 <RefreshCw size={14} className="inline mr-1" />
                 Reset
@@ -504,23 +817,23 @@ const MemberShip = () => {
             </div>
           </div>
 
-          {/* Stats Bar - Only 4 Stats */}
+          {/* Stats Bar */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <div className="bg-white rounded-lg shadow p-3">
+            <div className="bg-white rounded-lg shadow p-3 border border-gray-200">
               <p className="text-xs text-gray-500">Status</p>
               <p className="text-sm font-semibold text-green-600">✓ Active</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-3">
+            <div className="bg-white rounded-lg shadow p-3 border border-gray-200">
               <p className="text-xs text-gray-500">Days Remaining</p>
               <p className={`text-sm font-semibold ${daysUntilExpiry < 30 ? 'text-red-600' : 'text-gray-800'}`}>
                 {daysUntilExpiry} days
               </p>
             </div>
-            <div className="bg-white rounded-lg shadow p-3">
+            <div className="bg-white rounded-lg shadow p-3 border border-gray-200">
               <p className="text-xs text-gray-500">Member Since</p>
               <p className="text-sm font-semibold text-gray-800">{memberData.joiningDate}</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-3">
+            <div className="bg-white rounded-lg shadow p-3 border border-gray-200">
               <p className="text-xs text-gray-500">Expiry Date</p>
               <p className="text-sm font-semibold text-gray-800">{memberData.expiryDate}</p>
             </div>
@@ -528,49 +841,59 @@ const MemberShip = () => {
 
           {/* Main Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            {/* Left Column */}
+            {/* Left Column - 2/3 width */}
             <div className="lg:col-span-2 space-y-5">
-              {/* Payment History */}
-              <div className="bg-white rounded-xl shadow p-5">
+              {/* User Info Box */}
+              <div className="bg-white rounded-xl shadow p-5 border border-gray-200">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User size={32} className="text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800">{memberData.name}</h3>
+                    <p className="text-sm text-gray-600">Member #{memberData.memberId}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Active</span>
+                      <span className="text-xs text-gray-500">• {memberData.headOffice}</span>
+                    </div>
+                  </div>
+                  <button className="ml-auto text-sm text-green-600 hover:text-green-700 font-medium">
+                    Edit Profile
+                  </button>
+                </div>
+              </div>
+
+              {/* Uploaded Documents - Added before Branches */}
+              <UploadedDocuments files={memberData.uploadedFiles} />
+
+              {/* Branches Section */}
+              <BranchesSection branches={branches} onAddBranch={handleAddBranch} />
+
+              {/* Invoice Section */}
+              <div className="bg-white rounded-xl shadow p-5 border border-gray-200">
                 <div className="flex items-center gap-2 mb-4">
                   <History size={18} className="text-green-600" />
-                  <h2 className="text-lg font-bold text-gray-800">Payment History</h2>
+                  <h2 className="text-lg font-bold text-gray-800">Invoices</h2>
                   <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full ml-auto">
                     {memberData.payments?.length || 0} invoices
                   </span>
                 </div>
-                <PaymentTracker payments={memberData.payments} />
-              </div>
-
-              {/* Uploaded Documents */}
-              <div className="bg-white rounded-xl shadow p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <FileText size={18} className="text-green-600" />
-                  <h2 className="text-lg font-bold text-gray-800">Your Documents</h2>
-                </div>
-                <div className="space-y-1">
-                  {Object.entries(memberData.uploadedFiles).map(([key, files]) => {
-                    const labels = {
-                      pan: 'PAN Card',
-                      tax: 'Tax Certificate',
-                      citizenship: 'Citizenship',
-                      photo: 'Passport Photo'
-                    };
-                    return files.length > 0 && (
-                      <DocumentViewer key={key} files={files} label={labels[key]} />
-                    );
-                  })}
-                </div>
+                <PaymentTracker payments={memberData.payments} onPrePay={handlePrePay} />
               </div>
             </div>
 
-            {/* Right Column */}
+            {/* Right Column - 1/3 width */}
             <div className="space-y-5">
+              {/* Certificate */}
+              <CertificateCard memberData={memberData} />
+
+              {/* Membership Card */}
               <MembershipCard memberData={{
                 ...memberData,
                 expiryDate: `${memberData.expiryDate} (${daysUntilExpiry} days left)`
               }} />
 
+              {/* Pre-pay Section */}
               <PrePaymentSection 
                 onPrePay={handlePrePay} 
                 currentExpiry={memberData.expiryDate}
@@ -594,7 +917,7 @@ const MemberShip = () => {
     });
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4 md:p-8 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 p-4 md:p-8 flex items-center justify-center">
         <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="p-6 md:p-8">
             <div className="flex justify-between items-center mb-4">
@@ -608,7 +931,7 @@ const MemberShip = () => {
               </div>
               <button
                 onClick={simulateApproval}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-md transition-all"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow transition-all"
               >
                 ✅ Approve
               </button>
@@ -702,7 +1025,7 @@ const MemberShip = () => {
 
   // --- Initial Form View ---
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 p-4 md:p-8 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-100 p-4 md:p-8 flex items-center justify-center">
       <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
         <div className="p-6 md:p-8">
           {/* Demo Button */}
@@ -717,19 +1040,30 @@ const MemberShip = () => {
                   status: 'approved',
                   submittedAt: new Date().toISOString(),
                   approvedAt: new Date().toISOString(),
-                  expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+                  expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
+                  memberId: 'M' + Math.floor(Math.random() * 1000000),
+                  name: 'John Doe'
                 };
                 localStorage.setItem('membershipApplication', JSON.stringify(dummyData));
+                // Update user level to member
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                  try {
+                    const parsedUser = JSON.parse(storedUser);
+                    parsedUser.level = 'member';
+                    localStorage.setItem('user', JSON.stringify(parsedUser));
+                  } catch (e) {}
+                }
                 window.location.reload();
               }}
-              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-md transition-all"
+              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow transition-all"
             >
               🚀 Quick Approve
             </button>
           </div>
 
           {/* Eligibility Card */}
-          <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-5 mb-6 text-white shadow-lg">
+          <div className="bg-green-600 rounded-xl p-5 mb-6 text-white shadow-lg">
             <div className="flex items-start gap-3">
               <div className="bg-white/20 rounded-full p-1.5 flex-shrink-0">
                 <CheckCircle size={24} className="text-white" />

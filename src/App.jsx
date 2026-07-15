@@ -6,6 +6,10 @@ import Eligible from './pages/Eligible';
 import MemberShip from './pages/MemberShip';
 import Meetings from './pages/Meetings';
 import Navbar from './Components/Navbar';
+import Events from './pages/Events';
+import Training from './pages/Training';
+import Resources from './pages/Resources';
+import Branches from './pages/Branches';
 
 const App = () => {
   return (
@@ -17,7 +21,10 @@ const App = () => {
         <Route path="eligible" element={<Eligible />} />
         <Route path="membership" element={<MemberShip />} />
         <Route path="meetings" element={<Meetings />} />
-    
+        <Route path="events" element={<Events/>}/>
+        <Route path="training" element={<Training/>}/>
+        <Route path="resources" element={<Resources/>}/>
+        <Route path="branches" element={<Branches/>}/>
       </Route>
     </Routes>
     </div>
