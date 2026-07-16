@@ -10,6 +10,8 @@ import Events from './pages/Events';
 import Training from './pages/Training';
 import Resources from './pages/Resources';
 import Branches from './pages/Branches';
+import Setting from './pages/Setting';
+import Help from './pages/Help';
 
 const App = () => {
   return (
@@ -25,7 +27,11 @@ const App = () => {
         <Route path="training" element={<Training/>}/>
         <Route path="resources" element={<Resources/>}/>
         <Route path="branches" element={<Branches/>}/>
+        <Route path="Setting" element={<Setting/>}/>
+        <Route path="help" element={<Help/>}/>
+        
       </Route>
+     
     </Routes>
     </div>
   )

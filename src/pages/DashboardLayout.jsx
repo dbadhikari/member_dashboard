@@ -81,7 +81,7 @@ const DashboardLayout = () => {
   };
 
   const bottomMenus = [
-    { name: "Settings", icon: Settings, path: "settings" },
+    { name: "Setting", icon: Settings, path: "setting" },
     { name: "Help & Support", icon: HelpCircle, path: "help" },
   ];
 
@@ -210,7 +210,7 @@ const DashboardLayout = () => {
                         className={({ isActive }) =>
                           `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
                             isActive
-                              ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200/50"
+                              ? "bg-indigo-600 text-white hover:bg-indigo-700"
                               : "text-gray-600 hover:bg-gray-100/80 hover:text-indigo-600"
                           } ${isCollapsed ? 'justify-center' : ''}`
                         }
@@ -244,7 +244,7 @@ const DashboardLayout = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 min-w-[400px]">
           <div className="max-w-7xl mx-auto">
             <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-4 md:p-6 lg:p-8 min-h-[75vh] border border-gray-100/80">
               <Outlet />

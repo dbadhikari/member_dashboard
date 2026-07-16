@@ -746,9 +746,9 @@ const Branches = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredBranches.map((branch) => (
+            {filteredBranches.map((branch,idx) => (
               <BranchCard
-                key={branch.id}
+                key={idx}
                 branch={branch}
                 onViewDetails={(b) => {
                   setSelectedBranch(b);
